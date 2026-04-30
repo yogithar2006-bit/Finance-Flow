@@ -1,11 +1,17 @@
-<div align="center">
+# FinanceFlow Setup Instructions
 
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+FinanceFlow is a full-stack expense tracker built with React and Express. Data is stored locally in `db.json` for simplicity.
 
-  <h1>Built with AI Studio</h2>
+## Prerequisites
+- Node.js installed.
 
-  <p>The fastest path from prompt to production with Gemini.</p>
+## Setup
+1. Install dependencies: `npm install`
+2. Start the development server: `npm run dev`
 
-  <a href="https://aistudio.google.com/apps">Start building</a>
-
-</div>
+## Features
+- **Dashboard:** Overview of balances and recent activity.
+- **Transactions:** Full CRUD with category icons.
+- **Analysis:** Visual breakdown and budget tracking.
+- **Mock Auth:** Simple email-based sign-in for demonstration.
+- **Local Storage:** Transactions are persisted to `db.json` on the server.
