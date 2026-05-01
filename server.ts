@@ -42,6 +42,7 @@ async function syncRecurring(db: any) {
   const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   let changed = false;
 
+  if (!db.transactions) db.transactions = [];
   if (!db.recurring || db.recurring.length === 0) {
     db.recurring = [
       { 
@@ -57,27 +58,31 @@ async function syncRecurring(db: any) {
   }
 
   for (const item of db.recurring) {
-    // Check if this recurring item has already been added for this month
-    const exists = db.transactions.some((t: any) => 
-      t.recurring_id === item.id && 
-      t.date.startsWith(currentMonthYear)
-    );
+    try {
+      // Check if this recurring item has already been added for this month
+      const exists = db.transactions.some((t: any) => 
+        t.recurring_id === item.id && 
+        t && t.date && typeof t.date === 'string' && t.date.startsWith(currentMonthYear)
+      );
 
-    if (!exists) {
-      const date = `${currentMonthYear}-${String(item.day).padStart(2, '0')}`;
-      const newTransaction = {
-        id: Math.random().toString(36).substr(2, 9),
-        user_id: 'user_123',
-        amount: item.amount,
-        type: item.type,
-        category: item.category,
-        date: date,
-        note: item.note,
-        recurring_id: item.id,
-        created_at: new Date().toISOString()
-      };
-      db.transactions.push(newTransaction);
-      changed = true;
+      if (!exists) {
+        const date = `${currentMonthYear}-${String(item.day).padStart(2, '0')}`;
+        const newTransaction = {
+          id: Math.random().toString(36).substr(2, 9),
+          user_id: 'user_123',
+          amount: item.amount,
+          type: item.type,
+          category: item.category,
+          date: date,
+          note: item.note,
+          recurring_id: item.id,
+          created_at: new Date().toISOString()
+        };
+        db.transactions.push(newTransaction);
+        changed = true;
+      }
+    } catch (err) {
+      console.error('Error syncing recurring item:', err);
     }
   }
 
@@ -107,13 +112,7 @@ async function startServer() {
 
   // --- API Routes ---
 
-  // Auth Mock
-  app.post('/api/auth/login', async (req, res) => {
-    const { email } = req.body;
-    res.json({ user: { id: 'user_123', email } });
-  });
-
-  // Transactions CRUD
+  // Transactions CRUD (Stays for now, but client uses Firebase)
   app.get('/api/transactions', async (req, res) => {
     const db = await readDb();
     // Return sorted by date descending naturally, but we'll enforce it
@@ -187,6 +186,12 @@ async function startServer() {
         : "Great job! You've spent 22% less than last month. Consider moving these savings to your 'Summer Trip' goal.",
       suggestion: "Move $150 to Savings"
     });
+  });
+
+  // --- Error Handling ---
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    console.error(err.stack);
+    res.status(500).json({ error: 'Internal Server Error', message: err.message });
   });
 
   // --- Vite / Production Serving ---

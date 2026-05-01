@@ -11,6 +11,7 @@ export interface Transaction {
   category: string;
   date: string;
   note?: string;
+  recurring_id?: string;
   created_at: string;
 }
 

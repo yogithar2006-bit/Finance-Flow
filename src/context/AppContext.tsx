@@ -1,4 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { onAuthStateChanged, signInWithPopup, signOut as firebaseSignOut } from 'firebase/auth';
+import { auth, googleProvider } from '../lib/firebase';
 import { api } from '../lib/api';
 import { Transaction, Budget, User } from '../types';
 
@@ -10,7 +12,9 @@ interface AppContextType {
   darkMode: boolean;
   toggleDarkMode: () => void;
   refreshData: () => Promise<void>;
-  signIn: (email: string) => Promise<void>;
+  signIn: () => Promise<void>;
+  signInWithEmail: (email: string, pass: string) => Promise<void>;
+  signUpWithEmail: (email: string, pass: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -33,21 +37,62 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [darkMode]);
 
   useEffect(() => {
-    // Check local storage for mock session
-    const savedUser = localStorage.getItem('ff_user');
-    if (savedUser) {
-      const u = JSON.parse(savedUser);
-      setUser(u);
-      fetchData();
-    }
-    setLoading(false);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const u: User = {
+          id: firebaseUser.uid,
+          email: firebaseUser.email || '',
+        };
+        setUser(u);
+        fetchData(u.id).then(() => {
+          syncRecurringTransactions(u.id);
+        });
+      } else {
+        setUser(null);
+        setTransactions([]);
+        setBudgets([]);
+      }
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, []);
 
-  const fetchData = async () => {
+  const syncRecurringTransactions = async (userId: string) => {
+    try {
+      const recurringRules = await api.recurring.list();
+      const now = new Date();
+      const currentMonthYear = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      
+      for (const rule of recurringRules) {
+        const alreadyExists = transactions.some(t => 
+          t.recurring_id === rule.id && t && t.date && t.date.startsWith(currentMonthYear)
+        );
+
+        if (!alreadyExists) {
+          const date = `${currentMonthYear}-${String(rule.day).padStart(2, '0')}`;
+          await api.transactions.create({
+            amount: rule.amount,
+            type: rule.type,
+            category: rule.category,
+            date: date,
+            note: rule.note,
+            recurring_id: rule.id,
+            user_id: userId
+          });
+        }
+      }
+      refreshData();
+    } catch (error) {
+      console.error('Error syncing recurring:', error);
+    }
+  };
+
+  const fetchData = async (userId: string) => {
     try {
       const [transData, budgetData] = await Promise.all([
-        api.transactions.list(),
-        api.budgets.list()
+        api.transactions.list(userId),
+        api.budgets.list(userId)
       ]);
       setTransactions(transData);
       setBudgets(budgetData);
@@ -57,26 +102,55 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const refreshData = async () => {
-    await fetchData();
+    if (user) {
+      await fetchData(user.id);
+    }
   };
 
-  const signIn = async (email: string) => {
-    const { user } = await api.auth.login(email);
-    setUser(user);
-    localStorage.setItem('ff_user', JSON.stringify(user));
-    await fetchData();
+  const signIn = async () => {
+    try {
+      await signInWithPopup(auth, googleProvider);
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      throw error;
+    }
+  };
+
+  const signInWithEmail = async (email: string, pass: string) => {
+    const { signInWithEmailAndPassword } = await import('firebase/auth');
+    await signInWithEmailAndPassword(auth, email, pass);
+  };
+
+  const signUpWithEmail = async (email: string, pass: string) => {
+    const { createUserWithEmailAndPassword } = await import('firebase/auth');
+    await createUserWithEmailAndPassword(auth, email, pass);
   };
 
   const signOut = async () => {
-    setUser(null);
-    localStorage.removeItem('ff_user');
-    setTransactions([]);
+    try {
+      await firebaseSignOut(auth);
+      localStorage.removeItem('ff_user');
+    } catch (error) {
+      console.error('Sign out error:', error);
+    }
   };
 
   const toggleDarkMode = () => setDarkMode(!darkMode);
 
   return (
-    <AppContext.Provider value={{ user, loading, transactions, budgets, darkMode, toggleDarkMode, refreshData, signIn, signOut }}>
+    <AppContext.Provider value={{ 
+      user, 
+      loading, 
+      transactions, 
+      budgets, 
+      darkMode, 
+      toggleDarkMode, 
+      refreshData, 
+      signIn, 
+      signInWithEmail,
+      signUpWithEmail,
+      signOut 
+    }}>
       {children}
     </AppContext.Provider>
   );

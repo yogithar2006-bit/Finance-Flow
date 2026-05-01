@@ -1,0 +1,75 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default Deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isSignedIn() && request.auth.uid == userId;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    // Collection: transactions
+    match /transactions/{transactionId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() 
+                    && incoming().user_id == request.auth.uid
+                    && incoming().amount is number
+                    && incoming().type in ['income', 'expense']
+                    && incoming().date is string
+                    && incoming().created_at is string;
+      allow update: if isOwner(existing().user_id)
+                    && incoming().user_id == existing().user_id
+                    && incoming().amount is number
+                    && incoming().type == existing().type;
+      allow delete: if isOwner(existing().user_id);
+    }
+
+    // Collection: budgets
+    match /budgets/{budgetId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() 
+                    && incoming().user_id == request.auth.uid
+                    && incoming().limit_amount is number;
+      allow update: if isOwner(existing().user_id)
+                    && incoming().user_id == existing().user_id;
+      allow delete: if isOwner(existing().user_id);
+    }
+
+    // Collection: recurring
+    match /recurring/{ruleId} {
+      allow read: if isSignedIn() && resource.data.user_id == request.auth.uid;
+      allow create: if isSignedIn() 
+                    && incoming().user_id == request.auth.uid
+                    && incoming().amount is number
+                    && incoming().day is int;
+      allow update: if isOwner(existing().user_id)
+                    && incoming().user_id == existing().user_id;
+      allow delete: if isOwner(existing().user_id);
+    }
+
+    // Collection: users
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow write: if isOwner(userId);
+    }
+  }
+}

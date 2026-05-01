@@ -1,0 +1,74 @@
+{
+  "entities": {
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Financial transaction",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "date": { "type": "string" },
+        "note": { "type": "string" },
+        "recurring_id": { "type": "string" },
+        "created_at": { "type": "string", "format": "date-time" }
+      },
+      "required": ["user_id", "amount", "type", "category", "date", "created_at"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Category budget limit",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "category": { "type": "string" },
+        "limit_amount": { "type": "number" },
+        "period": { "type": "string", "enum": ["monthly"] }
+      },
+      "required": ["user_id", "category", "limit_amount", "period"]
+    },
+    "RecurringRule": {
+      "title": "Recurring Rule",
+      "description": "Monthly recurring transaction rule",
+      "type": "object",
+      "properties": {
+        "user_id": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "note": { "type": "string" },
+        "day": { "type": "integer" }
+      },
+      "required": ["user_id", "amount", "type", "category", "day"]
+    },
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "User preferences and profile",
+      "type": "object",
+      "properties": {
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "photoURL": { "type": "string" }
+      }
+    }
+  },
+  "firestore": {
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "Transactions collection"
+    },
+    "/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "Budgets collection"
+    },
+    "/recurring/{ruleId}": {
+      "schema": "RecurringRule",
+      "description": "Recurring rules collection"
+    },
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles collection"
+    }
+  }
+}
