@@ -9,8 +9,6 @@ interface AppContextType {
   loading: boolean;
   transactions: Transaction[];
   budgets: Budget[];
-  darkMode: boolean;
-  toggleDarkMode: () => void;
   refreshData: () => Promise<void>;
   signIn: () => Promise<void>;
   signInWithEmail: (email: string, pass: string) => Promise<void>;
@@ -25,16 +23,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [budgets, setBudgets] = useState<Budget[]>([]);
-  const [darkMode, setDarkMode] = useState(() => localStorage.getItem('ff_darkMode') === 'true');
-
-  useEffect(() => {
-    if (darkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-    localStorage.setItem('ff_darkMode', String(darkMode));
-  }, [darkMode]);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
@@ -135,16 +123,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const toggleDarkMode = () => setDarkMode(!darkMode);
-
   return (
     <AppContext.Provider value={{ 
       user, 
       loading, 
       transactions, 
       budgets, 
-      darkMode, 
-      toggleDarkMode, 
       refreshData, 
       signIn, 
       signInWithEmail,

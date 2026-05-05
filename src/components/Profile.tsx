@@ -4,7 +4,7 @@ import { LogOut, User, Settings, ChevronRight, Wallet, Save } from 'lucide-react
 import { api } from '../lib/api';
 
 export function Profile() {
-  const { user, signOut, refreshData, darkMode, toggleDarkMode } = useApp();
+  const { user, signOut, refreshData } = useApp();
   const [fixedIncome, setFixedIncome] = useState<number>(0);
   const [loading, setLoading] = useState(false);
   const [activeSection, setActiveSection] = useState<string | null>(null);
@@ -126,18 +126,6 @@ export function Profile() {
                   <p className="text-[10px] text-slate-400">Indian Rupee (INR)</p>
                 </div>
                 <span className="text-blue-600 font-bold text-sm">₹</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="font-bold text-slate-700 dark:text-slate-200 text-sm">Dark Mode</h4>
-                  <p className="text-[10px] text-slate-400">{darkMode ? 'Active' : 'Inactive'}</p>
-                </div>
-                <button 
-                  onClick={toggleDarkMode}
-                  className={`w-10 h-6 rounded-full relative transition-colors ${darkMode ? 'bg-blue-600' : 'bg-slate-200 dark:bg-slate-700'}`}
-                >
-                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${darkMode ? 'left-5' : 'left-1'}`}></div>
-                </button>
               </div>
             </div>
           )}

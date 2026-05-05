@@ -1,6 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
-import { LayoutGrid, PlusCircle, BarChart3, User, Bell, Sun, Moon } from 'lucide-react';
+import { LayoutGrid, PlusCircle, BarChart3, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 
 interface LayoutProps {
@@ -10,7 +10,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
-  const { user, darkMode, toggleDarkMode } = useApp();
+  const { user } = useApp();
 
   return (
     <div className="min-h-screen bg-[#f8f9ff] dark:bg-black pb-24 transition-colors">
@@ -26,16 +26,6 @@ export function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
           <span className="text-xl font-bold text-slate-900 dark:text-white tracking-tighter">FinanceFlow</span>
         </div>
         <div className="flex items-center gap-2">
-          <button 
-            onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400"
-          >
-            {darkMode ? <Sun size={20} /> : <Moon size={20} />}
-          </button>
-          <button className="p-2 rounded-full hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors text-slate-500 dark:text-slate-400 relative">
-            <Bell size={20} />
-            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white dark:border-slate-900"></span>
-          </button>
         </div>
       </header>
 

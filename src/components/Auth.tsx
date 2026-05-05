@@ -72,7 +72,7 @@ export function Auth() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8f9ff] dark:bg-black flex items-center justify-center p-4 transition-colors">
+    <div className="min-h-screen bg-[#f8f9ff] dark:bg-black flex items-center justify-center p-4 transition-colors relative">
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
